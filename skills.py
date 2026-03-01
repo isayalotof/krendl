@@ -2,6 +2,7 @@ import os
 import webbrowser
 import sys
 import subprocess
+import xml.etree.ElementTree as ET
 
 import voice
 
@@ -46,3 +47,25 @@ def offBot():
 
 def passive():
     pass
+
+
+def translator(text):
+    from deep_translator import GoogleTranslator
+    result = GoogleTranslator(source='auto', target='en').translate(text)
+    voice.speaker(result)
+
+
+def exchange(curr):
+    try:
+        response = requests.get('https://www.cbr.ru/scripts/XML_daily.asp')
+        root = ET.fromstring(response.text)
+        for valute in root.findall('Valute'):
+            if valute.find('CharCode').text == curr.upper():
+                value = valute.find('Value').text
+                nominal = valute.find('Nominal').text
+                name = valute.find('Name').text
+                voice.speaker(f'{nominal} {name} — {value} рублей')
+                return
+        voice.speaker(f'Валюта {curr} не найдена')
+    except:
+        voice.speaker('Произошла ошибка при запросе курса валют')
