@@ -12,6 +12,19 @@ import voice
 
 q = queue.Queue()
 
+# Ключевые слова, которые нужно убрать из фразы перед передачей в translator
+_TRANSLATE_KEYWORDS = ('переведи на английский', 'переведи текст', 'переведи слово', 'нужен перевод', 'переведи')
+
+
+def _get_currency(text):
+    """Извлекает код валюты из распознанного текста."""
+    for word in text.split():
+        if word.upper() in ('USD', 'EUR', 'CNY', 'GBP', 'JPY', 'CHF'):
+            return word.upper()
+        if word.lower() in words.CURRENCY_MAP:
+            return words.CURRENCY_MAP[word.lower()]
+    return text.split()[-1].upper()
+
 model = vosk.Model('vosk-model')
 
 device = sd.default.device
@@ -28,20 +41,30 @@ def recognize(data, vectorizer, clf):
     if not trg:
         return
 
-
-    data.replace(list(trg)[0], '')
+    data_clean = data.replace(list(trg)[0], '').strip()
 
     # получаем вектор полученного текста
     # сравниваем с вариантами, получая наиболее подходящий ответ
-    text_vector = vectorizer.transform([data]).toarray()[0]
+    text_vector = vectorizer.transform([data_clean]).toarray()[0]
     answer = clf.predict([text_vector])[0]
 
     # получение имени функции из ответа из data_set
     func_name = answer.split()[0]
+    response = answer.replace(func_name, '').strip()
 
-    voice.speaker(answer.replace(func_name, ''))
+    if response:
+        voice.speaker(response)
 
-    exec(func_name + '()')
+    if func_name == 'translator':
+        text = data_clean
+        for kw in _TRANSLATE_KEYWORDS:
+            text = text.replace(kw, '').strip()
+        translator(text)
+    elif func_name == 'exchange':
+        currency = _get_currency(data_clean)
+        exchange(currency)
+    else:
+        exec(func_name + '()')
 
 
 def main():
