@@ -14,6 +14,11 @@ def browser():
     webbrowser.open('https://www.youtube.com', new=2)
 
 
+def translator():
+
+    webbrowser.open('https://translate.yandex.ru', new=2)
+
+
 def game():
 
     try:
