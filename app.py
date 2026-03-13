@@ -29,7 +29,7 @@ def recognize(data, vectorizer, clf):
         return
 
 
-    data.replace(list(trg)[0], '')
+    data = data.replace(list(trg)[0], '')
 
     # получаем вектор полученного текста
     # сравниваем с вариантами, получая наиболее подходящий ответ
